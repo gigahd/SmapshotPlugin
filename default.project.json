@@ -1,0 +1,15 @@
+{
+  "name": "Smapshot",
+  "tree": {
+    "$className": "DataModel",
+
+    "ServerStorage": {
+      "Smapshot": {
+        "$path": "src",
+        "Packages": {
+            "$path": "Packages"
+        }
+      }
+    }
+  }
+}
