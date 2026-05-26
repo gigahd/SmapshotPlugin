@@ -1,20 +1,27 @@
 --!nonstrict
 const Selection = game:GetService("Selection")
-const ServerStorage = game:GetService("ServerStorage")
 
-const Smapshot = require(script.Parent.Parent.Smapshot)
-const Colors = require(script.Parent.Colors)
 const Form = require(script.Parent.Form)
 const GetOrCreateSmapshotFolder = require(script.Parent.Parent.Helper.GetOrCreateSmapshotFolder)
 const Panel = require(script.Parent.Panel)
+const Smapshot = require(script.Parent.Parent.Packages.Smapshot)
 const Vide = require(script.Parent.Parent.Packages.Vide)
 local create = Vide.create
 local source = Vide.source
 
-
+local function parseNameList(text: string): { string }
+    const result: { string } = {}
+    for _, raw in string.split(text, ",") do
+        const trimmed = string.gsub(raw, "^%s*(.-)%s*$", "%1")
+        if trimmed ~= "" then
+            table.insert(result, trimmed)
+        end
+    end
+    return result
+end
 
 return function(props: { visible: () -> boolean })
-    local exportType = source("Folder")
+    local mapName = source("")
     local saveDefaults = source(false)
 
     local terrainEnabled = source(false)
@@ -22,48 +29,75 @@ return function(props: { visible: () -> boolean })
 
     local instancesEnabled = source(false)
     local instancesList = source({} :: { Instance })
+    local ignoreInstanceParents = source(false)
 
     local lightingEnabled = source(false)
+    local filterEffects = source(false)
+    local filterMode = source("Whitelist")
+    local effectNames = source("")
 
     local status = source("")
+    local statusKind = source("info" :: "info" | "success" | "error")
+
+    local function setStatus(text: string, kind: "info" | "success" | "error"?)
+        status(text)
+        statusKind(kind or "info")
+    end
 
     local function pickSlice()
         for _, item in Selection:Get() do
             if item:IsA("BasePart") then
                 terrainSlice(item)
+                setStatus("Slice set to " .. item.Name, "info")
                 return
             end
         end
-        status("No BasePart in selection")
+        setStatus("No BasePart in selection", "error")
     end
 
     local function pickInstances()
-        instancesList(table.clone(Selection:Get()))
+        const selected = table.clone(Selection:Get())
+        instancesList(selected)
+        setStatus(string.format("%d instance(s) captured", #selected), "info")
     end
 
     local function doSave()
-        local config: Smapshot.SaveConfig = {
-            exportType = exportType() :: any,
+        local config: Smapshot.SnapshotConfig = {
             saveDefaults = saveDefaults(),
+            saveLocation = GetOrCreateSmapshotFolder(),
         }
+        const trimmedName = string.gsub(mapName(), "^%s*(.-)%s*$", "%1")
+        if trimmedName ~= "" then
+            config.name = trimmedName
+        end
         if terrainEnabled() then
             config.terrain = { slice = terrainSlice() }
         end
         if instancesEnabled() then
             config.instances = instancesList()
+            config.instanceConfig = { ignoreParents = ignoreInstanceParents() }
         end
         if lightingEnabled() then
-            config.lighting = {}
+            local lighting: Smapshot.LightingConfig = {}
+            if filterEffects() then
+                const names = parseNameList(effectNames())
+                if #names > 0 then
+                    if filterMode() == "Whitelist" then
+                        lighting.effectsWhiteList = names
+                    else
+                        lighting.effectsBlackList = names
+                    end
+                end
+            end
+            config.lighting = lighting
         end
-
-        local ok, result = pcall(Smapshot.Save, config)
+        local ok, result = pcall(Smapshot.Snapshot, config)
         if not ok then
-            status("Save failed: " .. tostring(result))
+            setStatus("Save failed: " .. tostring(result), "error")
             return
         end
-        result.Parent = GetOrCreateSmapshotFolder()
         Selection:Set({ result })
-        status("Saved as " .. result.Name)
+        setStatus("Saved as " .. result.Name, "success")
     end
 
     return Panel({
@@ -79,7 +113,6 @@ return function(props: { visible: () -> boolean })
                 CanvasSize = UDim2.new(),
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
                 ScrollBarThickness = 4,
-                ScrollBarImageColor3 = Colors.textMuted,
                 ScrollingDirection = Enum.ScrollingDirection.Y,
 
                 create("UIListLayout")({
@@ -89,19 +122,24 @@ return function(props: { visible: () -> boolean })
                 }),
                 create("UIPadding")({
                     PaddingRight = UDim.new(0, 8),
+                    PaddingBottom = UDim.new(0, 6),
                 }),
 
                 Form.Section({
-                    title = "Export",
+                    title = "General",
                     layoutOrder = 1,
                     children = {
-                        Form.SegmentedToggle({
-                            value = exportType,
-                            options = { "Folder", "Model" },
-                            onSelect = function(option)
-                                exportType(option)
-                            end,
+                        Form.Label({
+                            text = "Map name",
+                            muted = true,
+                            width = UDim2.new(1, 0, 0, 16),
                             layoutOrder = 1,
+                        }),
+                        Form.TextInput({
+                            value = mapName,
+                            placeholder = "MapSave (auto-named if blank)",
+                            width = UDim2.new(1, 0, 0, 26),
+                            layoutOrder = 2,
                         }),
                         Form.ToggleRow({
                             value = saveDefaults,
@@ -109,7 +147,7 @@ return function(props: { visible: () -> boolean })
                                 saveDefaults(not saveDefaults())
                             end,
                             label = "Save default property values",
-                            layoutOrder = 2,
+                            layoutOrder = 3,
                         }),
                     },
                 }),
@@ -128,6 +166,7 @@ return function(props: { visible: () -> boolean })
                         }),
                         Form.Row({
                             layoutOrder = 2,
+                            visible = terrainEnabled,
                             children = {
                                 Form.Label({
                                     text = function()
@@ -172,6 +211,7 @@ return function(props: { visible: () -> boolean })
                         }),
                         Form.Row({
                             layoutOrder = 2,
+                            visible = instancesEnabled,
                             children = {
                                 Form.Label({
                                     text = function()
@@ -196,6 +236,15 @@ return function(props: { visible: () -> boolean })
                                 }),
                             },
                         }),
+                        Form.ToggleRow({
+                            value = ignoreInstanceParents,
+                            onToggle = function()
+                                ignoreInstanceParents(not ignoreInstanceParents())
+                            end,
+                            label = "Ignore original parents",
+                            layoutOrder = 3,
+                            visible = instancesEnabled,
+                        }),
                     },
                 }),
 
@@ -211,24 +260,54 @@ return function(props: { visible: () -> boolean })
                             label = "Include lighting",
                             layoutOrder = 1,
                         }),
+                        Form.ToggleRow({
+                            value = filterEffects,
+                            onToggle = function()
+                                filterEffects(not filterEffects())
+                            end,
+                            label = "Filter lighting effects",
+                            layoutOrder = 2,
+                            visible = lightingEnabled,
+                        }),
+                        Form.SegmentedToggle({
+                            value = filterMode,
+                            options = { "Whitelist", "Blacklist" },
+                            onSelect = function(option)
+                                filterMode(option)
+                            end,
+                            layoutOrder = 3,
+                            visible = function()
+                                return lightingEnabled() and filterEffects()
+                            end,
+                        }),
+                        Form.TextInput({
+                            value = effectNames,
+                            placeholder = "e.g. Sky, Atmosphere, BloomEffect",
+                            width = UDim2.new(1, 0, 0, 26),
+                            layoutOrder = 4,
+                            visible = function()
+                                return lightingEnabled() and filterEffects()
+                            end,
+                        }),
                     },
                 }),
 
-                Form.Row({
+                Form.StatusBanner({
+                    text = status,
+                    kind = statusKind,
                     layoutOrder = 5,
+                }),
+
+                Form.Row({
+                    layoutOrder = 6,
                     height = 32,
                     children = {
                         Form.Button({
-                            text = "Save",
+                            text = "Save Map",
                             onClick = doSave,
                             primary = true,
-                            width = UDim2.fromOffset(120, 28),
+                            width = UDim2.new(1, 0, 0, 30),
                             layoutOrder = 1,
-                        }),
-                        Form.Label({
-                            text = status,
-                            width = UDim2.new(1, -130, 1, 0),
-                            layoutOrder = 2,
                         }),
                     },
                 }),

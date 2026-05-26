@@ -2,7 +2,6 @@
 const Selection = game:GetService("Selection")
 
 const Smapshot = require(script.Parent.Parent.Smapshot)
-const Colors = require(script.Parent.Colors)
 const Form = require(script.Parent.Form)
 const GetOrCreateSmapshotFolder = require(script.Parent.Parent.Helper.GetOrCreateSmapshotFolder)
 const Panel = require(script.Parent.Panel)
@@ -11,6 +10,7 @@ local create = Vide.create
 local source = Vide.source
 
 type Mode = "Instance" | "Asset ID"
+type StatusKind = "info" | "success" | "error"
 
 return function(props: { visible: () -> boolean })
     local mode = source("Instance" :: Mode)
@@ -18,6 +18,12 @@ return function(props: { visible: () -> boolean })
     local assetIdText = source("")
     local keepDirty = source(false)
     local status = source("")
+    local statusKind = source("info" :: StatusKind)
+
+    local function setStatus(text: string, kind: StatusKind?)
+        status(text)
+        statusKind(kind or "info")
+    end
 
     local function isMode(m: Mode)
         return function()
@@ -29,38 +35,46 @@ return function(props: { visible: () -> boolean })
         for _, item in Selection:Get() do
             if item:IsA("Folder") or item:IsA("Model") then
                 sourceInstance(item)
+                setStatus("Source set to " .. item.Name, "info")
                 return
             end
         end
-        status("No Folder or Model in selection")
+        setStatus("No Folder or Model in selection", "error")
     end
 
     local function doLoad()
         if mode() == "Instance" then
             local target = sourceInstance()
             if not target then
-                status("No source instance set")
+                setStatus("No source instance set", "error")
                 return
             end
-            status("Loading...")
+            setStatus("Loading...", "info")
             task.spawn(function()
-                local ok, err = pcall(Smapshot.LoadAsync, target, keepDirty())
-                status(if ok then "Loaded from " .. target.Name else "Load failed: " .. tostring(err))
+                if not Smapshot.IsSnapshot(target) then
+                    setStatus(`{target} is not a valid Smapshot`)
+                end
+                local ok, err = pcall(Smapshot.Load, target, keepDirty())
+                if ok then
+                    setStatus("Loaded from " .. target.Name, "success")
+                else
+                    setStatus("Load failed: " .. tostring(err), "error")
+                end
             end)
         else
             local id = tonumber(assetIdText())
             if not id then
-                status("Asset ID must be a number")
+                setStatus("Asset ID must be a number", "error")
                 return
             end
-            status("Loading asset " .. id .. "...")
-            task.spawn(function()
-                local ok, err = pcall(Smapshot.LoadAsync, id, keepDirty())
+            setStatus("Loading asset " .. id .. "...", "info")
+            task.spawn(function(): ()
+                local ok, err = pcall(Smapshot.LoadAssetAsync, id, keepDirty())
                 if ok then
-                    status(`Loaded asset: {id}`)
+                    setStatus(`Loaded asset: {id}`, "success")
                     err.Parent = GetOrCreateSmapshotFolder()
                 else
-                    status(`Load failed: {err}`)
+                    setStatus(`Load failed: {err}`, "error")
                 end
             end)
         end
@@ -79,7 +93,6 @@ return function(props: { visible: () -> boolean })
                 CanvasSize = UDim2.new(),
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
                 ScrollBarThickness = 4,
-                ScrollBarImageColor3 = Colors.textMuted,
                 ScrollingDirection = Enum.ScrollingDirection.Y,
 
                 create("UIListLayout")({
@@ -89,6 +102,7 @@ return function(props: { visible: () -> boolean })
                 }),
                 create("UIPadding")({
                     PaddingRight = UDim.new(0, 8),
+                    PaddingBottom = UDim.new(0, 6),
                 }),
 
                 Form.Section({
@@ -135,18 +149,14 @@ return function(props: { visible: () -> boolean })
                         }),
                         Form.Row({
                             layoutOrder = 3,
+                            height = 26,
                             visible = isMode("Asset ID"),
                             children = {
-                                Form.Label({
-                                    text = "Asset ID:",
-                                    width = UDim2.fromOffset(60, 24),
-                                    layoutOrder = 1,
-                                }),
                                 Form.TextInput({
                                     value = assetIdText,
-                                    placeholder = "1234567890",
-                                    width = UDim2.new(1, -66, 1, 0),
-                                    layoutOrder = 2,
+                                    placeholder = "Asset ID (e.g. 1234567890)",
+                                    width = UDim2.new(1, 0, 1, 0),
+                                    layoutOrder = 1,
                                 }),
                             },
                         }),
@@ -162,27 +172,28 @@ return function(props: { visible: () -> boolean })
                             onToggle = function()
                                 keepDirty(not keepDirty())
                             end,
-                            label = "Keep dirty terrain chunks",
+                            label = "Don't reset any unset properties",
                             layoutOrder = 1,
                         }),
                     },
                 }),
 
-                Form.Row({
+                Form.StatusBanner({
+                    text = status,
+                    kind = statusKind,
                     layoutOrder = 3,
+                }),
+
+                Form.Row({
+                    layoutOrder = 4,
                     height = 32,
                     children = {
                         Form.Button({
-                            text = "Load",
+                            text = "Load Map",
                             onClick = doLoad,
                             primary = true,
-                            width = UDim2.fromOffset(120, 28),
+                            width = UDim2.new(1, 0, 0, 30),
                             layoutOrder = 1,
-                        }),
-                        Form.Label({
-                            text = status,
-                            width = UDim2.new(1, -130, 1, 0),
-                            layoutOrder = 2,
                         }),
                     },
                 }),

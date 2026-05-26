@@ -6,4 +6,4 @@ realm = "shared"
 
 [dependencies]
 Vide = "centau/vide@^0.4.0"
-# VideRipple = "littensy/vide-ripple@^0.10.2"
+Smapshot = "gigahd/smapshot@0.1.0"
