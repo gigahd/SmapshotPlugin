@@ -82,7 +82,7 @@ return function(props: { visible: () -> boolean })
 
     return Panel({
         name = "LoadPanel",
-        title = "Load Map",
+        title = "Load Snapshot",
         visible = props.visible,
         children = {
             create("ScrollingFrame")({
@@ -124,9 +124,7 @@ return function(props: { visible: () -> boolean })
                                 Form.Label({
                                     text = function()
                                         local inst = sourceInstance()
-                                        return if inst
-                                            then "Source: " .. inst.Name
-                                            else "Source: <none>"
+                                        return if inst then "Source: " .. inst.Name else "Source: <none>"
                                     end,
                                     width = UDim2.new(1, -184, 1, 0),
                                     layoutOrder = 1,
@@ -189,7 +187,7 @@ return function(props: { visible: () -> boolean })
                     height = 32,
                     children = {
                         Form.Button({
-                            text = "Load Map",
+                            text = "Load Snapshot",
                             onClick = doLoad,
                             primary = true,
                             width = UDim2.new(1, 0, 0, 30),

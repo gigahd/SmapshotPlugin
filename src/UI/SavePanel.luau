@@ -102,7 +102,7 @@ return function(props: { visible: () -> boolean })
 
     return Panel({
         name = "SavePanel",
-        title = "Save Map",
+        title = "Save Snapshot",
         visible = props.visible,
         children = {
             create("ScrollingFrame")({
@@ -130,7 +130,7 @@ return function(props: { visible: () -> boolean })
                     layoutOrder = 1,
                     children = {
                         Form.Label({
-                            text = "Map name",
+                            text = "Snapshot name",
                             muted = true,
                             width = UDim2.new(1, 0, 0, 16),
                             layoutOrder = 1,
@@ -171,9 +171,7 @@ return function(props: { visible: () -> boolean })
                                 Form.Label({
                                     text = function()
                                         local part = terrainSlice()
-                                        return if part
-                                            then "Slice: " .. part.Name
-                                            else "Slice: full terrain"
+                                        return if part then "Slice: " .. part.Name else "Slice: full terrain"
                                     end,
                                     width = UDim2.new(1, -184, 1, 0),
                                     layoutOrder = 1,
@@ -303,7 +301,7 @@ return function(props: { visible: () -> boolean })
                     height = 32,
                     children = {
                         Form.Button({
-                            text = "Save Map",
+                            text = "Save Snapshot",
                             onClick = doSave,
                             primary = true,
                             width = UDim2.new(1, 0, 0, 30),
