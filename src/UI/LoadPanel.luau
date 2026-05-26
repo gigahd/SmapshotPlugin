@@ -1,4 +1,5 @@
 --!nonstrict
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Selection = game:GetService("Selection")
 
 const Smapshot = require(script.Parent.Parent.Smapshot)
@@ -40,6 +41,40 @@ return function(props: { visible: () -> boolean })
             end
         end
         setStatus("No Folder or Model in selection", "error")
+    end
+
+    local function findPackageModule(): ModuleScript?
+        local packages = script.Parent.Parent:FindFirstChild("Packages")
+        local index = packages and packages:FindFirstChild("_Index")
+        if not index then
+            return nil
+        end
+        for _, entry in index:GetChildren() do
+            if string.sub(entry.Name, 1, #"gigahd_smapshot") == "gigahd_smapshot" then
+                local module = entry:FindFirstChild("smapshot")
+                if module and module:IsA("ModuleScript") then
+                    return module
+                end
+            end
+        end
+        return nil
+    end
+
+    local function doInstall()
+        local module = findPackageModule()
+        if not module then
+            setStatus("Could not locate bundled Smapshot package", "error")
+            return
+        end
+        local existing = ReplicatedStorage:FindFirstChild("Smapshot")
+        if existing then
+            existing:Destroy()
+        end
+        local clone = module:Clone()
+        clone.Name = "Smapshot"
+        clone.Parent = ReplicatedStorage
+        Selection:Set({ clone })
+        setStatus(if existing then "Replaced ReplicatedStorage.Smapshot" else "Installed ReplicatedStorage.Smapshot", "success")
     end
 
     local function doLoad()
@@ -192,6 +227,31 @@ return function(props: { visible: () -> boolean })
                             primary = true,
                             width = UDim2.new(1, 0, 0, 30),
                             layoutOrder = 1,
+                        }),
+                    },
+                }),
+
+                Form.Section({
+                    title = "Runtime Package",
+                    layoutOrder = 5,
+                    children = {
+                        Form.Label({
+                            text = "Install the Smapshot module into ReplicatedStorage so games can load snapshots at runtime without Wally.",
+                            muted = true,
+                            width = UDim2.new(1, 0, 0, 32),
+                            layoutOrder = 1,
+                        }),
+                        Form.Row({
+                            layoutOrder = 2,
+                            height = 28,
+                            children = {
+                                Form.Button({
+                                    text = "Install to ReplicatedStorage",
+                                    onClick = doInstall,
+                                    width = UDim2.new(1, 0, 0, 26),
+                                    layoutOrder = 1,
+                                }),
+                            },
                         }),
                     },
                 }),
