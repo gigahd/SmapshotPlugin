@@ -2,10 +2,10 @@
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Selection = game:GetService("Selection")
 
-const Smapshot = require(script.Parent.Parent.Smapshot)
 const Form = require(script.Parent.Form)
 const GetOrCreateSmapshotFolder = require(script.Parent.Parent.Helper.GetOrCreateSmapshotFolder)
 const Panel = require(script.Parent.Panel)
+const Smapshot = require(script.Parent.Parent.Packages.Smapshot)
 const Vide = require(script.Parent.Parent.Packages.Vide)
 local create = Vide.create
 local source = Vide.source
