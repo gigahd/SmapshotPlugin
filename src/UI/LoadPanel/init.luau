@@ -2,9 +2,7 @@
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local Form = require(script.Parent.Form)
-local GetOrCreateSmapshotFolder = require(script.Parent.Parent.Helper.GetOrCreateSmapshotFolder)
 local Panel = require(script.Parent.Panel)
-local RecentAssets = require(script.Parent.Parent.Helper.RecentAssets)
 local Smapshot = require(script.Parent.Parent.Packages.Smapshot)
 local Vide = require(script.Parent.Parent.Packages.Vide)
 local create = Vide.create
@@ -43,7 +41,7 @@ return function(props: { visible: () -> boolean })
         return ok, result
     end
 
-    local function doLoadInstance()
+    local function doLoad()
         local target = sourceSection.liveSnapshotInstance()
         if not target then
             setStatus("Select a snapshot Folder/Model in Explorer", "error")
@@ -70,37 +68,6 @@ return function(props: { visible: () -> boolean })
                 setStatus("Load failed: " .. tostring(err), "error")
             end
         end)
-    end
-
-    local function doLoadAsset()
-        local id = tonumber(sourceSection.assetIdText())
-        if not id then
-            setStatus("Asset ID must be a number", "error")
-            return
-        end
-        setStatus("Loading asset " .. id .. "...", "info")
-        task.spawn(function()
-            local ok, result = recordHistory(
-                `Smapshot: Load asset {id}`,
-                Smapshot.LoadAssetAsync, id, optionsSection.consume(), optionsSection.keepDirty()
-            )
-            if ok then
-                local snapshot = result :: Folder
-                RecentAssets.add(id, snapshot.Name)
-                snapshot.Parent = GetOrCreateSmapshotFolder()
-                setStatus(`Loaded asset {id}`, "success")
-            else
-                setStatus("Load failed: " .. tostring(result), "error")
-            end
-        end)
-    end
-
-    local function doLoad()
-        if sourceSection.mode() == "Instance" then
-            doLoadInstance()
-        else
-            doLoadAsset()
-        end
     end
 
     return Panel({
