@@ -1,6 +1,6 @@
 --!nonstrict
-const Colors = require(script.Parent.Colors)
-const Vide = require(script.Parent.Parent.Packages.Vide)
+local Colors = require(script.Parent.Colors)
+local Vide = require(script.Parent.Parent.Packages.Vide)
 local create = Vide.create
 
 return function(props: { name: string, title: string, visible: () -> boolean, children: { Instance } })

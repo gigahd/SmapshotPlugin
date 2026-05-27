@@ -1,4 +1,4 @@
-const ServerStorage = game:GetService("ServerStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 return function(): Folder
     local folder = ServerStorage:FindFirstChild("Smapshot")
