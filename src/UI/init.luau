@@ -1,6 +1,7 @@
 --!nonstrict
 local Colors = require(script.Colors)
 local Form = require(script.Form)
+local Smapshot = require(script.Parent.Packages.Smapshot)
 local Vide = require(script.Parent.Packages.Vide)
 local VideRipple = require(script.Parent.Packages.VideRipple)
 local LoadPanel = require(script.LoadPanel)
@@ -11,9 +12,14 @@ local useMotion = VideRipple.useMotion
 
 type TabId = "Save" | "Load"
 
+-- Plugin version mirrors wally.toml; bump both together.
+local PLUGIN_VERSION = "0.1.0"
+local SMAPSHOT_VERSION = Smapshot.ReadVersion(Smapshot.Snapshot({})) or "?"
+
 local TAB_BAR_HEIGHT = 34
 local TAB_BAR_PADDING_TOP = 6
 local TAB_BAR_PADDING_BOTTOM = 6
+local VERSION_FOOTER_HEIGHT = 16
 local CONTENT_OFFSET = TAB_BAR_HEIGHT + TAB_BAR_PADDING_TOP + TAB_BAR_PADDING_BOTTOM
 
 local function setupUI(widget: DockWidgetPluginGui)
@@ -60,11 +66,25 @@ local function setupUI(widget: DockWidgetPluginGui)
                 }),
             }),
 
+            create("TextLabel")({
+                Name = "VersionFooter",
+                AnchorPoint = Vector2.new(1, 1),
+                Position = UDim2.new(1, -8, 1, -2),
+                Size = UDim2.new(0, 240, 0, VERSION_FOOTER_HEIGHT - 4),
+                BackgroundTransparency = 1,
+                Font = Enum.Font.Gotham,
+                TextSize = 11,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                TextColor3 = Colors.textMuted,
+                TextTransparency = 0.2,
+                Text = `Plugin v{PLUGIN_VERSION}  ·  Smapshot v{SMAPSHOT_VERSION}`,
+            }),
+
             -- Viewport clips the rail so the inactive panel stays hidden.
             create("Frame")({
                 Name = "Viewport",
                 Position = UDim2.new(0, 0, 0, CONTENT_OFFSET),
-                Size = UDim2.new(1, 0, 1, -CONTENT_OFFSET),
+                Size = UDim2.new(1, 0, 1, -CONTENT_OFFSET - VERSION_FOOTER_HEIGHT),
                 BackgroundTransparency = 1,
                 ClipsDescendants = true,
 
