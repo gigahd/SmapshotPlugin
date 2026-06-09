@@ -13,7 +13,7 @@ local useMotion = VideRipple.useMotion
 type TabId = "Save" | "Load"
 
 -- Plugin version mirrors wally.toml; bump both together.
-local PLUGIN_VERSION = "0.1.0"
+local PLUGIN_VERSION = "0.2.0"
 local SMAPSHOT_VERSION = Smapshot.ReadVersion(Smapshot.Snapshot({})) or "?"
 
 local TAB_BAR_HEIGHT = 34

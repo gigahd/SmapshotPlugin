@@ -56,7 +56,7 @@ return function(deps: { setStatus: (string, Status?) -> () })
 
     local ui = Form.Section({
         title = "Runtime Package",
-        layoutOrder = 3,
+        layoutOrder = 4,
         accent = Colors.sectionAccents.runtime,
         children = {
             Form.Label({

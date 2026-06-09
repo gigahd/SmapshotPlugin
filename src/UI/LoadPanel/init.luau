@@ -10,6 +10,7 @@ local source = Vide.source
 
 local OptionsSection = require(script.OptionsSection)
 local RuntimeSection = require(script.RuntimeSection)
+local SectionsSection = require(script.SectionsSection)
 local SourceSection = require(script.SourceSection)
 
 type StatusKind = "info" | "success" | "error"
@@ -27,6 +28,7 @@ return function(props: { visible: () -> boolean })
 
     local sourceSection = SourceSection()
     local optionsSection = OptionsSection()
+    local sectionsSection = SectionsSection()
     local runtimeSection = RuntimeSection(deps)
 
     local function recordHistory<T...>(label: string, fn: (T...) -> any, ...: T...): (boolean, any)
@@ -58,10 +60,10 @@ return function(props: { visible: () -> boolean })
         end
         setStatus("Loading " .. target.Name .. "...", "info")
         task.spawn(function()
-            local ok, err = recordHistory(
-                "Smapshot: Load " .. target.Name,
-                Smapshot.Load, target, optionsSection.consume(), optionsSection.keepDirty()
-            )
+            local config: Smapshot.LoadConfig = {}
+            optionsSection.contributeToConfig(config)
+            sectionsSection.contributeToConfig(config)
+            local ok, err = recordHistory("Smapshot: Load " .. target.Name, Smapshot.Load, target, config)
             if ok then
                 setStatus("Loaded from " .. target.Name, "success")
             else
@@ -95,6 +97,7 @@ return function(props: { visible: () -> boolean })
                 }),
                 sourceSection.ui,
                 optionsSection.ui,
+                sectionsSection.ui,
                 runtimeSection.ui,
             }),
             create("Frame")({
