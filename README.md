@@ -1,6 +1,6 @@
 # Smapshot Plugin
 
-A Roblox Studio plugin for saving and loading maps as portable snapshots — capture your map once, then load it into any place, either from a snapshot saved in your game or directly from a Roblox asset id at runtime.
+A Roblox Studio plugin for saving and loading maps as portable snapshots — capture your map once, then load it back into your place whenever you need it.
 
 The plugin gives you a GUI for everything the Smapshot package can do, so you don't need to write code to capture and restore maps.
 
@@ -19,13 +19,11 @@ Open the **Smapshot** panel from the Plugins toolbar. The panel is a visual edit
 3. Set a name for the snapshot and your Snapshots will be saved in a Smapshot Folder inside of `ServerStorage`.
 4. Click **Save Snapshot**. The plugin calls `Smapshot.Snapshot` with your config.
 
-You can then publish the snapshot folder as a Roblox asset if you want to load it dynamically via `LoadAssetAsync` at runtime.
-
 ### Loading a snapshot
 
-1. Select an existing snapshot `Folder` in the Explorer, or enter a Roblox asset id.
+1. Select an existing snapshot `Folder` in the Explorer.
 2. Choose load options: **consume** (reparent instead of clone, faster but one-shot) and **keep dirty** (additively layer onto existing state instead of clearing).
-3. Click **Load** — the plugin calls `Smapshot.Load` (for a selected folder) or `Smapshot.LoadAssetAsync` (for an asset id) with your options.
+3. Click **Load** — the plugin calls `Smapshot.Load` with your options.
 
 ### Installing the package into your place
 

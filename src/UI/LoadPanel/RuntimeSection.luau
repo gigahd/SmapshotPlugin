@@ -56,11 +56,11 @@ return function(deps: { setStatus: (string, Status?) -> () })
 
     local ui = Form.Section({
         title = "Runtime Package",
-        layoutOrder = 3,
+        layoutOrder = 4,
         accent = Colors.sectionAccents.runtime,
         children = {
             Form.Label({
-                text = "Install the Smapshot module into ReplicatedStorage so games can load snapshots at runtime without Wally.",
+                text = "Install the Smapshot module into ReplicatedStorage so games can load snapshots at runtime. This will not allow you to use LoadAssetAsync.",
                 muted = true,
                 width = UDim2.new(1, 0, 0, 32),
                 layoutOrder = 1,

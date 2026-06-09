@@ -1,10 +1,10 @@
 [package]
 name = "giga/smapshot"
-version = "0.1.0"
+version = "0.2.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
 [dependencies]
 Vide = "centau/vide@^0.4.0"
 VideRipple = "littensy/vide-ripple@^0.10.2"
-Smapshot = "gigahd/smapshot@0.2.0"
+Smapshot = "gigahd/smapshot-plugin@0.4.0"

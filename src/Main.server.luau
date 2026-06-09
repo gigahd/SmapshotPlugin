@@ -1,8 +1,8 @@
 local PluginSettings = require(script.Parent.Helper.PluginSettings)
 
 -- Init must happen BEFORE any module that calls PluginSettings.source at load
--- time (e.g. Helper.RecentAssets); otherwise those sources see no plugin and
--- fall back to defaults forever.
+-- time (e.g. the SavePanel sections); otherwise those sources see no plugin
+-- and fall back to defaults forever.
 PluginSettings.init(plugin)
 
 local UI = require(script.Parent.UI)
